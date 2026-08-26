@@ -23,10 +23,9 @@ class DatabaseConfig:
     def get_sqlserver_config():
         """Obtener configuración de SQL Server"""
         return {
-            'server': os.getenv('SQLSERVER_HOST', 'localhost'),
+            'server': os.getenv('SQLSERVER_SERVER', '(localdb)\\MSSQLLocalDB'),
             'database': os.getenv('SQLSERVER_DATABASE', 'vehiculos_db'),
-            'user': os.getenv('SQLSERVER_USER', 'sa'),
-            'password': os.getenv('SQLSERVER_PASSWORD', ''),
+            'trusted_connection': os.getenv('SQLSERVER_TRUSTED_CONNECTION', 'true'),
             'driver': os.getenv('SQLSERVER_DRIVER', 'ODBC Driver 17 for SQL Server')
         }
     

@@ -12,7 +12,6 @@ build/
 *.egg-info/
 .eggs/
 *.egg
-.env
 
 # IDE
 .vscode/
@@ -20,9 +19,12 @@ build/
 *.swp
 *.swo
 
-# Environment
+# Environment - ARCHIVOS DE SECRETOS
+.env
 .env.local
 .env.*.local
+*.env
+*.env.local
 
 # Logs
 *.log

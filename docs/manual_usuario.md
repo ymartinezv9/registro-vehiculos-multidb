@@ -38,5 +38,7 @@ cp .env.example .env
 ```
 Editar ```.env``` con tus credenciales
 
-# 5. Ejecutar
+### 5. Ejecutar
+```bash
 python run.py
+```

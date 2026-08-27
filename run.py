@@ -5,94 +5,95 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.models import Vehiculo
-from app.validators import VehiculoValidator
+from app.services import VehiculoService
+from app.repositories import MySQLRepository, SQLServerRepository, OracleRepository
 from app.config import DatabaseConfig
-from app.repositories import BaseRepository, MySQLRepository, SQLServerRepository, OracleRepository
 
-def main():
-    print("Probando Oracle Repository...")
-    print("-" * 40)
+def probar_servicio(repo, nombre_bd):
+    """Función para probar el servicio con un repositorio específico"""
+    print(f"\n{'='*60}")
+    print(f"Probando Servicio con {nombre_bd}")
+    print('='*60)
     
-    # 1. Mostrar configuración
-    print("\nConfiguracion Oracle:")
-    config = DatabaseConfig.get_oracle_config()
-    config_mostrar = config.copy()
-    config_mostrar['password'] = '***' if config['password'] else '(vacia)'
-    print(f"   {config_mostrar}")
+    # Crear servicio
+    service = VehiculoService(repo)
     
-    # 2. Crear repositorio
-    repo = OracleRepository()
-    
-    # 3. Probar conexión
-    print("\nProbando conexion...")
-    if repo.connect():
-        print("   Conexion exitosa a Oracle")
-    else:
-        print("   Error de conexion a Oracle")
-        print("\nVerifique:")
-        print("   1. Que Oracle este ejecutandose")
-        print("   2. Que las credenciales sean correctas en .env.local")
-        print("   3. Que la base de datos exista")
+    # Conectar
+    print("\nConectando...")
+    if not service.connect():
+        print("   Error de conexion")
         return
     
-    # 4. Probar operaciones CRUD
-    print("\nProbando operaciones CRUD...")
+    print("   Conexion exitosa")
     
-    # Primero, asegurarnos de que el vehículo de prueba no exista
-    if repo.exists("TEST001"):
-        repo.delete("TEST001")
+    # 1. Registrar vehículo
+    print("\n1. Registrando vehiculo...")
+    success, message = service.registrar_vehiculo("TEST001", "Toyota", "Corolla", 2020, "Rojo")
+    print(f"   {message}")
     
-    vehiculo_test = Vehiculo("TEST001", "Toyota", "Corolla", 2020, "Rojo")
-    print(f"\n   Vehiculo de prueba: {vehiculo_test}")
-    
-    print("\n   Guardando vehiculo...")
-    if repo.save(vehiculo_test):
-        print("      Guardado exitoso")
-    else:
-        print("      Error al guardar")
-    
-    print("\n   Verificando existencia...")
-    if repo.exists("TEST001"):
-        print("      Vehiculo existe")
-    else:
-        print("      Vehiculo no encontrado")
-    
-    print("\n   Buscando por placa...")
-    encontrado = repo.find_by_plate("TEST001")
-    if encontrado:
-        print(f"      Encontrado: {encontrado}")
-    else:
-        print("      No encontrado")
-    
-    print("\n   Listando todos los vehiculos...")
-    todos = repo.find_all()
-    print(f"      Total: {len(todos)} vehiculos")
-    for v in todos[:5]:
+    # 2. Listar todos
+    print("\n2. Listando vehiculos...")
+    vehiculos, message = service.listar_vehiculos()
+    print(f"   {message}")
+    for v in vehiculos[:3]:
         print(f"      - {v}")
     
-    print("\n   Actualizando vehiculo...")
-    vehiculo_actualizado = Vehiculo("TEST001", "Toyota", "Camry", 2021, "Azul")
-    if repo.update(vehiculo_actualizado):
-        print("      Actualizado exitosamente")
-        actualizado = repo.find_by_plate("TEST001")
-        if actualizado:
-            print(f"      Nuevos datos: {actualizado}")
-    else:
-        print("      Error al actualizar")
+    # 3. Consultar por placa
+    print("\n3. Consultando vehiculo TEST001...")
+    vehiculo, message = service.consultar_vehiculo("TEST001")
+    print(f"   {message}")
+    if vehiculo:
+        print(f"      Datos: {vehiculo}")
     
-    print("\n   Eliminando vehiculo...")
-    if repo.delete("TEST001"):
-        print("      Eliminado exitosamente")
-        if not repo.exists("TEST001"):
-            print("      Confirmado: vehiculo ya no existe")
-    else:
-        print("      Error al eliminar")
+    # 4. Actualizar vehículo
+    print("\n4. Actualizando vehiculo...")
+    success, message = service.actualizar_vehiculo("TEST001", "Toyota", "Camry", 2021, "Azul")
+    print(f"   {message}")
     
+    # 5. Verificar actualización
+    print("\n5. Verificando actualizacion...")
+    vehiculo, message = service.consultar_vehiculo("TEST001")
+    if vehiculo:
+        print(f"      Datos actualizados: {vehiculo}")
+    
+    # 6. Eliminar vehículo
+    print("\n6. Eliminando vehiculo...")
+    success, message = service.eliminar_vehiculo("TEST001")
+    print(f"   {message}")
+    
+    # 7. Verificar eliminación
+    print("\n7. Verificando eliminacion...")
+    vehiculo, message = service.consultar_vehiculo("TEST001")
+    print(f"   {message}")
+    
+    # Desconectar
     print("\nDesconectando...")
-    repo.disconnect()
+    service.disconnect()
     print("   Desconectado")
+
+
+def main():
+    print("Probando Capa de Servicios")
+    print("="*60)
     
-    print("\nPrueba completada!")
+    # Probar con MySQL
+    print("\n[1] Probando con MySQL")
+    print("-" * 40)
+    repo_mysql = MySQLRepository()
+    probar_servicio(repo_mysql, "MySQL")
+    
+    # Probar con SQL Server
+    print("\n[2] Probando con SQL Server")
+    print("-" * 40)
+    repo_sqlserver = SQLServerRepository()
+    probar_servicio(repo_sqlserver, "SQL Server")
+    
+    # Probar con Oracle
+    print("\n[3] Probando con Oracle")
+    print("-" * 40)
+    repo_oracle = OracleRepository()
+    probar_servicio(repo_oracle, "Oracle")
+
 
 if __name__ == "__main__":
     main()

@@ -7,37 +7,40 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from app.models import Vehiculo
 from app.validators import VehiculoValidator
 from app.config import DatabaseConfig
-from app.repositories import BaseRepository, MySQLRepository, SQLServerRepository
+from app.repositories import BaseRepository, MySQLRepository, SQLServerRepository, OracleRepository
 
 def main():
-    # Cambiar a SQLServerRepository para probar
-    print("Probando SQL Server Repository...")
+    print("Probando Oracle Repository...")
     print("-" * 40)
     
     # 1. Mostrar configuración
-    print("\nConfiguracion SQL Server:")
-    config = DatabaseConfig.get_sqlserver_config()
-    # Mostrar config sin contraseña
+    print("\nConfiguracion Oracle:")
+    config = DatabaseConfig.get_oracle_config()
     config_mostrar = config.copy()
+    config_mostrar['password'] = '***' if config['password'] else '(vacia)'
     print(f"   {config_mostrar}")
     
     # 2. Crear repositorio
-    repo = SQLServerRepository()
+    repo = OracleRepository()
     
     # 3. Probar conexión
     print("\nProbando conexion...")
     if repo.connect():
-        print("   Conexion exitosa a SQL Server")
+        print("   Conexion exitosa a Oracle")
     else:
-        print("   Error de conexion a SQL Server")
+        print("   Error de conexion a Oracle")
         print("\nVerifique:")
-        print("   1. Que SQL Server LocalDB este ejecutandose")
-        print("   2. Que la base de datos 'vehiculos_db' exista")
-        print("   3. Que el driver ODBC este instalado")
+        print("   1. Que Oracle este ejecutandose")
+        print("   2. Que las credenciales sean correctas en .env.local")
+        print("   3. Que la base de datos exista")
         return
     
     # 4. Probar operaciones CRUD
     print("\nProbando operaciones CRUD...")
+    
+    # Primero, asegurarnos de que el vehículo de prueba no exista
+    if repo.exists("TEST001"):
+        repo.delete("TEST001")
     
     vehiculo_test = Vehiculo("TEST001", "Toyota", "Corolla", 2020, "Rojo")
     print(f"\n   Vehiculo de prueba: {vehiculo_test}")
@@ -64,7 +67,7 @@ def main():
     print("\n   Listando todos los vehiculos...")
     todos = repo.find_all()
     print(f"      Total: {len(todos)} vehiculos")
-    for v in todos[:3]:
+    for v in todos[:5]:
         print(f"      - {v}")
     
     print("\n   Actualizando vehiculo...")
